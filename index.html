@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema de Gestión Tributaria Municipal — Jayllihuaya</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#">Jayllihuaya — Gestión Tributaria</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navCollapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link active" href="#map">Mapa</a></li>
+          <li class="nav-item"><a class="nav-link" href="#descripcion">Descripción</a></li>
+          <li class="nav-item"><a class="nav-link" href="#municipalidad">Municipalidad</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero (con imagen de fondo semitransparente) -->
+  <header class="hero py-4 mb-3">
+    <div class="container text-center">
+      <h1 class="display-6">Sistema de Gestión Tributaria Municipal</h1>
+      <p class="lead mb-0">Gestiona y visualiza predios, tributos y estados de pago del centro poblado de Jayllihuaya.
+      </p>
+    </div>
+  </header>
+
+  <main class="container mb-4">
+    <!-- Map + Sidebar row (wrapped in .map-area for a subtle dark background) -->
+    <div class="map-area p-3 rounded">
+      <div class="row g-3">
+        <div class="col-lg-8">
+          <div id="map" class="shadow-sm rounded"></div>
+
+          <!-- Legend moved below the map for better visibility -->
+          <div class="card mt-3 modern-legend shadow-sm border-0">
+            <div class="card-body d-flex flex-column flex-sm-row align-items-sm-center justify-content-between">
+              <div>
+                <h6 class="mb-1 small text-muted">Leyenda - Estado Tributario</h6>
+                <div class="d-flex gap-3 align-items-center flex-wrap">
+                  <div class="legend-item d-flex align-items-center">
+                    <span class="leyenda-color-lg" style="background: #28a745;"></span>
+                    <span class="small ms-2">Al Día</span>
+                  </div>
+                  <div class="legend-item d-flex align-items-center">
+                    <span class="leyenda-color-lg" style="background: #dc3545;"></span>
+                    <span class="small ms-2">Moroso</span>
+                  </div>
+                  <div class="legend-item d-flex align-items-center">
+                    <span class="leyenda-color-lg" style="background: #007bff;"></span>
+                    <span class="small ms-2">Exonerado</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-2 mt-sm-0 text-sm-end">
+                <small class="text-muted">Haz clic en un predio para ver información tributaria</small>
+                <p class="small text-muted mt-2 mb-0">Los colores indican el estado de pago de cada predio.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="col-lg-4">
+          <div class="card mb-3" id="estadisticas">
+            <div class="card-body">
+              <h5 class="card-title">Filtros Tributarios</h5>
+
+              <!-- Buscador por contribuyente -->
+              <div class="mb-2">
+                <label for="search-input" class="form-label small">Buscar contribuyente</label>
+                <div class="input-group">
+                  <input id="search-input" type="search" class="form-control form-control-sm"
+                    placeholder="Nombre del propietario o contribuyente...">
+                  <button id="search-btn" class="btn btn-sm btn-outline-primary">Buscar</button>
+                </div>
+              </div>
+
+              <!-- Filtro por estado tributario -->
+              <div class="mb-2">
+                <label class="form-label small">Estado de pago</label>
+                <select id="filtro-estado-pago" class="form-select form-select-sm">
+                  <option value="all">Todos</option>
+                  <option value="AL_DIA">Al Día</option>
+                  <option value="MOROSO">Morosos</option>
+                  <option value="EXONERADO">Exonerados</option>
+                </select>
+              </div>
+
+              <!-- Filtro por rango de deuda -->
+              <div class="mb-2">
+                <label class="form-label small">Rango de deuda (S/.)</label>
+                <div class="d-flex gap-2">
+                  <input id="filtro-deuda-min" type="number" class="form-control form-control-sm" placeholder="mín"
+                    min="0" step="0.01">
+                  <input id="filtro-deuda-max" type="number" class="form-control form-control-sm" placeholder="máx"
+                    min="0" step="0.01">
+                </div>
+              </div>
+
+              <!-- Filtros legacy (mantener compatibilidad) -->
+              <div class="mb-2">
+                <label class="form-label small">Servicios básicos</label>
+                <select id="filtro-servicios" class="form-select form-select-sm">
+                  <option value="all">Todos</option>
+                  <option value="Completo">Completo</option>
+                  <option value="Incompleto">Incompleto</option>
+                </select>
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label small">Rango de ingreso (S/.)</label>
+                <div class="d-flex gap-2">
+                  <input id="filtro-ingreso-min" type="number" class="form-control form-control-sm" placeholder="mín"
+                    min="0">
+                  <input id="filtro-ingreso-max" type="number" class="form-control form-control-sm" placeholder="máx"
+                    min="0">
+                </div>
+              </div>
+
+              <div class="d-grid gap-2 d-md-block mb-3">
+                <button id="applyFilters" class="btn btn-sm btn-primary">Aplicar filtros</button>
+                <button id="resetFilters" class="btn btn-sm btn-outline-secondary">Reset</button>
+              </div>
+
+              <!-- Gráficos -->
+              <div class="mb-2">
+                <canvas id="chartServicios" height="160"></canvas>
+              </div>
+              <div class="mb-2">
+                <canvas id="chartIngreso" height="160"></canvas>
+              </div>
+
+              <!-- Export / acciones -->
+              <div class="d-flex gap-2 mt-2">
+                <button id="export-csv" class="btn btn-sm btn-success w-100">Exportar CSV</button>
+                <button id="export-pdf" class="btn btn-sm btn-danger w-100">Exportar PDF</button>
+              </div>
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="toggle-heatmap">
+                <label class="form-check-label small" for="toggle-heatmap">Mostrar mapa de calor (deuda
+                  pendiente)</label>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Description section -->
+    <section id="descripcion" class="mt-4">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h4 class="card-title">Centro Poblado de Jayllihuaya</h4>
+          <div class="row">
+            <div class="col-md-7">
+              <p class="card-text">El centro poblado de Jayllihuaya tiene una superficie total de 1573.5 metros
+                cuadrados aproximadamente, según el
+                plano expedido por la dirección regional agraria de Puno. La mayoría de las construcciones se encuentran
+                en el centro de toda la zona y en la parte
+                interior el lado de la Vía Panamericana esta un tipo de suelo arcilloso y limoso con tendencia a
+                inundarse en las temporadas de lluvia por lo cual no es tan poblada como el interior. y en sus
+                zonas más al interior tiene muchas islas verdes que son aprovechadas para el cultivo.
+                Jayllihuaya es una urbanización que contiene tres etapas, conformado por las Urbanizaciones
+                Aziruni primera, segunda y tercera etapa. Además de otras urbanizaciones y asentamientos
+                humanos</p>
+            </div>
+            <div class="col-md-5 d-flex align-items-center">
+              <img src="images/description.jpg" alt="Municipalidad de Jayuhualla" class="img-fluid rounded shadow-sm">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Municipalidad section -->
+    <section id="municipalidad" class="mt-4">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h4 class="card-title">Municipalidad — Datos importantes</h4>
+          <ul class="list-unstyled">
+            <li><strong>Nombre:</strong> Municipalidad Centro Poblado de Jayllihuaya</li>
+            <li><strong>Alcalde:</strong> Silverio Calumani Sihuayro</li>
+            <li><strong>Dirección:</strong> PLAZA PRINCIPAL Mz. D - LOTE N° 03</li>
+            <li><strong>Teléfono:</strong> +(51) 953005449, +(51)951302208, +(51)951048682</li>
+            <li><strong>Correo:</strong> <a>municipalidad.jayllihuaya@hotmail.com</a></li>
+            <li><strong>Facebook:</strong> <a
+                href="https://www.facebook.com/profile.php?id=100090525935273&locale=es_LA">Municipalidad de Jayllihuaya
+              </a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-light py-3">
+    <div class="container text-center small text-muted">© Proyecto — Datos y mapa de Jayuhualla</div>
+  </footer>
+
+  <!-- Scripts: Leaflet, Chart.js, jsPDF, KD-Tree, app script, Bootstrap JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet.heat plugin for heatmap -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+  <!-- Chart.js for charts in the statistics panel -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    // Ensure jsPDF constructor is available as global `jsPDF` (bridge for UMD builds)
+    if (window.jspdf && !window.jsPDF) window.jsPDF = window.jspdf.jsPDF;
+  </script>
+  <script src="kd_tree.js"></script>
+  <script src="script.js"></script>
+  <button id="btn-nuevo-predio" class="btn btn-primary btn-lg rounded-circle shadow floating-btn"
+    title="Agregar Nuevo Predio">
+    <i class="fas fa-plus"></i> <span class="d-none d-md-inline ms-1">+</span>
+  </button>
+
+  <!-- Modal CRUD Predio -->
+  <div class="modal fade" id="modalPredio" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalTitulo">Nuevo Predio</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formPredio">
+            <input type="hidden" id="predioId">
+
+            <div class="row g-3">
+              <!-- Ubicación -->
+              <div class="col-12">
+                <h6 class="text-muted border-bottom pb-2">📍 Ubicación Geográfica</h6>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Latitud</label>
+                <input type="number" step="any" class="form-control form-control-sm" id="latitud" required readonly>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Longitud</label>
+                <input type="number" step="any" class="form-control form-control-sm" id="longitud" required readonly>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Código Catastral</label>
+                <input type="text" class="form-control form-control-sm" id="codigo_catastral" placeholder="HOG999"
+                  required>
+              </div>
+
+              <!-- Contribuyente -->
+              <div class="col-12 mt-3">
+                <h6 class="text-muted border-bottom pb-2">👤 Contribuyente</h6>
+              </div>
+              <div class="col-md-8">
+                <label class="form-label small">Nombre Completo</label>
+                <input type="text" class="form-control form-control-sm" id="contribuyente_nombre" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Tipo Vivienda</label>
+                <select class="form-select form-select-sm" id="tipo_vivienda">
+                  <option value="Rústica">Rústica</option>
+                  <option value="Material Noble">Material Noble</option>
+                  <option value="Adobe">Adobe</option>
+                  <option value="Mixto">Mixto</option>
+                </select>
+              </div>
+
+              <!-- Datos Tributarios -->
+              <div class="col-12 mt-3">
+                <h6 class="text-muted border-bottom pb-2">💰 Información Tributaria</h6>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label small">Autovalúo (S/)</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" id="autovaluo" value="0">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Ingreso Familiar (S/)</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" id="ingreso_familiar" value="0">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">N° Personas</label>
+                <input type="number" class="form-control form-control-sm" id="cantidad_personas" value="1">
+              </div>
+
+              <div class="col-md-6">
+                <div class="card bg-light border-0 p-2">
+                  <label class="form-label small fw-bold">Impuesto Predial</label>
+                  <div class="input-group input-group-sm mb-2">
+                    <span class="input-group-text">S/</span>
+                    <input type="number" step="0.01" class="form-control" id="monto_impuesto" placeholder="Monto">
+                  </div>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="pago_impuesto">
+                    <label class="form-check-label small" for="pago_impuesto">¿Pagado?</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="card bg-light border-0 p-2">
+                  <label class="form-label small fw-bold">Arbitrios Municipales</label>
+                  <div class="input-group input-group-sm mb-2">
+                    <span class="input-group-text">S/</span>
+                    <input type="number" step="0.01" class="form-control" id="monto_arbitrios" placeholder="Monto">
+                  </div>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="pago_arbitrios">
+                    <label class="form-check-label small" for="pago_arbitrios">¿Pagado?</label>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-success" id="btnGuardarPredio">Guardar Predio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

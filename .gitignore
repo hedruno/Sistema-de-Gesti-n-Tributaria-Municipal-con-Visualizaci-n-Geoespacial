@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Docker
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backups
+*.backup
+*.bak
+backup_*.sql
+
+# Node modules (si se agregara frontend con npm)
+node_modules/
+
+# Archivos de configuración local
+.env.local
+docker-compose.override.yml
+
+# Datos sensibles
+*.pem
+*.key
