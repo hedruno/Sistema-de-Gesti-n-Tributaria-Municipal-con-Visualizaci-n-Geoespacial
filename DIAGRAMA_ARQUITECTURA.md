@@ -17,13 +17,13 @@ graph TD
         direction TB
         
         %% Frontend Service
-        Frontend[Frontend Service<br/>(Nginx Server)]:::container
+        Frontend["Frontend Service<br/>(Nginx Server)"]:::container
         
         %% Backend Service
-        Backend[Backend Service<br/>(FastAPI - Python)]:::container
+        Backend["Backend Service<br/>(FastAPI - Python)"]:::container
         
         %% Database Service
-        DB[(Database Service<br/>PostgreSQL + PostGIS)]:::database
+        DB[("Database Service<br/>PostgreSQL + PostGIS")]:::database
     end
 
     %% Conexiones
