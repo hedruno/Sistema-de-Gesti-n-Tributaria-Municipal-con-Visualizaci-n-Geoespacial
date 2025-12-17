@@ -718,10 +718,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Eventos de Filtros
   document.getElementById('applyFilters')?.addEventListener('click', applyFiltersAndRender);
-  document.getElementById('btn-search-contribuyente')?.addEventListener('click', buscarContribuyente);
-  document.getElementById('search-contribuyente')?.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') buscarContribuyente();
-  });
+
+  // Exportar
 
   // Exportar
   document.getElementById('btn-export-csv')?.addEventListener('click', exportarCSV);
@@ -746,11 +744,30 @@ document.addEventListener('DOMContentLoaded', () => {
 // BÚSQUEDA Y FILTROS
 // =====================================================
 
-// Búsqueda simple
-document.getElementById('btn-search-contribuyente')?.addEventListener('click', () => {
-  const val = document.getElementById('search-contribuyente').value;
-  buscarContribuyente(val);
-});
+// Eventos de Búsqueda
+function configurarBusqueda() {
+  const btnSearch = document.getElementById('search-btn');
+  const inputSearch = document.getElementById('search-input');
+
+  if (btnSearch && inputSearch) {
+    // 1. Clic en botón
+    btnSearch.addEventListener('click', () => {
+      buscarContribuyente(inputSearch.value);
+    });
+
+    // 2. Tecla Enter en input
+    inputSearch.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        buscarContribuyente(inputSearch.value);
+      }
+    });
+  } else {
+    console.warn('Elementos de búsqueda no encontrados en el DOM');
+  }
+}
+
+// Llamar a configuración
+configurarBusqueda();
 
 // Asegurar que el mapa registre el click para el modo creación
 function initMap() {
